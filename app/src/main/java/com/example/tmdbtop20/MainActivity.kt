@@ -16,7 +16,7 @@ import java.util.*
 
 const val MOVIE_INFO = "com.example.tmdbtop20.MOVIE_INFO"
 const val apiUrl: String = "https://desafio-mobile.nyc3.digitaloceanspaces.com/movies"
-const val cacheSize: Int = 1024 * 1024
+const val cacheSize: Int = 5 * 1024 * 1024
 
 class MainActivity : AppCompatActivity(), SwipeRefreshLayout.OnRefreshListener {
 
