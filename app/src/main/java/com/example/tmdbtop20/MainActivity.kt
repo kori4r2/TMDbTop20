@@ -3,6 +3,8 @@ package com.example.tmdbtop20
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import android.view.View
+import android.widget.ImageView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.android.volley.*
 import com.android.volley.toolbox.*
@@ -12,10 +14,13 @@ import org.json.JSONArray
 import java.text.SimpleDateFormat
 import java.util.*
 
+const val MOVIE_INFO = "com.example.tmdbtop20.MOVIE_INFO"
+const val apiUrl: String = "https://desafio-mobile.nyc3.digitaloceanspaces.com/movies"
+const val cacheSize: Int = 1024 * 1024
+
 class MainActivity : AppCompatActivity(), SwipeRefreshLayout.OnRefreshListener {
 
     private val formatter: SimpleDateFormat = SimpleDateFormat("yyyy-MM-dd")
-    private val apiUrl: String = "https://desafio-mobile.nyc3.digitaloceanspaces.com/movies"
     private var cache: DiskBasedCache? = null
 
     class MovieEntry(
@@ -36,6 +41,7 @@ class MainActivity : AppCompatActivity(), SwipeRefreshLayout.OnRefreshListener {
 
     var currentEntries: MutableList<MovieEntry> = mutableListOf<MovieEntry>()
     var adapter: MovieEntryAdapter? = null
+    var overlay: ImageView? = null
 
     private fun parseResponse(response: JSONArray) {
         if (response.length() > 0) {
@@ -65,6 +71,7 @@ class MainActivity : AppCompatActivity(), SwipeRefreshLayout.OnRefreshListener {
             parseResponse(response)
 
             swipeLayout.isRefreshing = false
+            overlay?.visibility = View.INVISIBLE
         } else {
 
             val network = BasicNetwork(HurlStack())
@@ -80,10 +87,12 @@ class MainActivity : AppCompatActivity(), SwipeRefreshLayout.OnRefreshListener {
                     printMovies()
                     queue.stop()
                     swipeLayout.isRefreshing = false
+                    overlay?.visibility = View.INVISIBLE
                 },
                 Response.ErrorListener { error: VolleyError? ->
                     queue.stop()
                     swipeLayout.isRefreshing = false
+                    overlay?.visibility = View.INVISIBLE
                     Snackbar.make(findViewById(R.id.myCoordinatorLayout),
                                                 R.string.connectionError,
                                                 Snackbar.LENGTH_LONG).show()
@@ -116,16 +125,19 @@ class MainActivity : AppCompatActivity(), SwipeRefreshLayout.OnRefreshListener {
     }
 
     override fun onRefresh() {
+        overlay?.visibility = View.VISIBLE
         searchForNewMovies()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        cache = DiskBasedCache(cacheDir, 1024 * 1024)
+        cache = DiskBasedCache(cacheDir, cacheSize)
 
+        overlay = findViewById(R.id.overlay)
         adapter = MovieEntryAdapter(this, currentEntries, cache)
         movieList.adapter = adapter;
+        overlay?.visibility = View.VISIBLE
         swipeLayout.isRefreshing = true
         searchForNewMovies()
 
